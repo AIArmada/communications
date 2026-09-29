@@ -9,7 +9,6 @@ title: Configuration
 ```php
 'database' => [
     'table_prefix' => '',
-    'json_column_type' => 'jsonb',
     'tables' => [
         'batches' => 'communication_batches',
         'threads' => 'communication_threads',
@@ -32,10 +31,7 @@ title: Configuration
 ],
 ```
 
-- `database.table_prefix` - prepended to every default table name
-- `database.json_column_type` - column type used for JSON columns in the migrations; set `json` on MySQL and `jsonb` on PostgreSQL (env: `COMMUNICATIONS_JSON_COLUMN_TYPE`)
-- `database.tables.destinations` - stores per-recipient channel addresses used by `CommunicationDestinationResolver`
-- `database.tables.notification_inboxes` - stores the inbox rows used by `HasInbox`, `DispatchInboxNotificationAction`, and the inbox Livewire screen
+- `database.tables.destinations` stores per-recipient channel addresses used by `CommunicationDestinationResolver`
 
 ## Defaults
 
@@ -123,7 +119,13 @@ the old method names are not retained.
 
 ## Destinations
 
-Configured under `database.tables.destinations` — see the Database section for the full table map.
+```php
+'database' => [
+    'tables' => [
+        'destinations' => 'communication_destinations',
+    ],
+],
+```
 
 - `CommunicationDestination` rows are owner-scoped polymorphic records (`recipient_type` / `recipient_id`) with `channel`, optional `address` / `external_id`, `status`, `is_primary`, and `verified_at`
 - The default `DestinationResolver` binding is `CommunicationDestinationResolver`: it prefers an active primary destination for the channel, then falls back to Laravel notifiable routing (`routeNotificationFor` / `routeNotificationFor{Driver}`)
@@ -142,7 +144,15 @@ Use these columns when a recipient should opt in or out for a narrower surface t
 
 ## Inbox
 
-Configured under `database.tables.notification_inboxes` — see the Database section for the full table map. Inbox rows are created by `HasInbox`, `DispatchInboxNotificationAction`, and the inbox Livewire screen.
+```php
+'database' => [
+    'tables' => [
+        'notification_inboxes' => 'notification_inboxes',
+    ],
+],
+```
+
+- `database.tables.notification_inboxes` stores the inbox rows used by `HasInbox`, `DispatchInboxNotificationAction`, and the inbox Livewire screen
 
 ## Integrations
 
@@ -219,13 +229,6 @@ from provider-specific payload fields.
     'idempotency_ttl' => 3600,
 ],
 ```
-
-- `cache.idempotency_store` - cache store used for idempotency locks; defaults to `env('CACHE_STORE', 'array')`
-
-> **warning**
-> `IdempotencyLockService` calls `Cache::store(...)`, so the `array` store only lives for the current process. With the default `array` store, idempotency keys do **not** dedupe across HTTP requests or queue workers. Set `COMMUNICATIONS_IDEMPOTENCY_STORE` to a shared store (`redis`, `database`, `memcached`) whenever idempotency matters.
-
-- `cache.idempotency_ttl` - lifetime of an acquired idempotency lock, in seconds
 
 ## Logging
 
